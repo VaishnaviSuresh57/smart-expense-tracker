@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Expense Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-wallet"></i> Expense Tracker</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active"><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('inventory') }}"><i class="fas fa-box-open"></i> Inventory</a></li>
+                <li><a href="{{ url_for('receipts') }}"><i class="fas fa-receipt"></i> Receipts</a></li>
+                <li><a href="{{ url_for('insights') }}"><i class="fas fa-chart-pie"></i> Insights</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <header class="content-header">
+                <h1>Welcome, {{ username }}!</h1>
+                <p>Here's an overview of your expense tracking</p>
+            </header>
+
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-box-open"></i></div>
+                    <div class="card-content">
+                        <h3>Inventory Items</h3>
+                        <p class="card-value">{{ inventory|length }}</p>
+                    </div>
+                    <a href="{{ url_for('inventory') }}" class="card-link">Manage Inventory</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-shopping-basket"></i></div>
+                    <div class="card-content">
+                        <h3>Shopping List</h3>
+                        {% set needed_count = 0 %}
+                        {% for item, data in inventory.items() %}
+                            {% if data.needed %}
+                                {% set needed_count = needed_count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        <p class="card-value">{{ needed_count }}</p>
+                    </div>
+                    <a href="{{ url_for('inventory') }}" class="card-link">View Shopping List</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-receipt"></i></div>
+                    <div class="card-content">
+                        <h3>Recent Receipts</h3>
+                        <p class="card-value">{{ session.get('receipt_count', 0) }}</p>
+                    </div>
+                    <a href="{{ url_for('receipts') }}" class="card-link">View Receipts</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="card-content">
+                        <h3>Insights</h3>
+                        <p class="card-value"><i class="fas fa-lightbulb"></i></p>
+                    </div>
+                    <a href="{{ url_for('insights') }}" class="card-link">View Insights</a>
+                </div>
+            </div>
+
+            <div class="dashboard-sections">
+                <section class="quick-actions">
+                    <h2>Quick Actions</h2>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('inventory') }}" class="btn primary"><i class="fas fa-plus"></i> Add Inventory Item</a>
+                        <a href="{{ url_for('receipts') }}" class="btn secondary"><i class="fas fa-upload"></i> Upload Receipt</a>
+                    </div>
+                </section>
+
+                <section class="shopping-list">
+                    <h2>Shopping List</h2>
+                    <ul class="item-list">
+                        {% set has_needed_items = false %}
+                        {% for item, data in inventory.items() %}
+                            {% if data.needed %}
+                                {% set has_needed_items = true %}
+                                <li>
+                                    <span class="item-name">{{ item }}</span>
+                                    <span class="item-quantity">Qty: {{ data.quantity }}</span>
+                                    <span class="item-price">${{ "%.2f"|format(data.price) }}</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if not has_needed_items %}
+                            <li class="empty-list">No items in your shopping list</li>
+                        {% endif %}
+                    </ul>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

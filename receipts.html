@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipts - Expense Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-wallet"></i> Expense Tracker</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('inventory') }}"><i class="fas fa-box-open"></i> Inventory</a></li>
+                <li class="active"><a href="{{ url_for('receipts') }}"><i class="fas fa-receipt"></i> Receipts</a></li>
+                <li><a href="{{ url_for('insights') }}"><i class="fas fa-chart-pie"></i> Insights</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <header class="content-header">
+                <h1>Receipt Management</h1>
+                <p>Upload and manage your receipts</p>
+            </header>
+
+            <div class="receipts-container">
+                <div class="upload-section">
+                    <h2>Upload New Receipt</h2>
+                    <form id="receipt-upload-form" enctype="multipart/form-data">
+                        <div class="file-upload-container">
+                            <label for="receipt-file" class="file-upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Choose a file or drag it here</span>
+                            </label>
+                            <input type="file" id="receipt-file" name="receipt" accept=".jpg,.jpeg,.png" required>
+                            <div id="file-name-display"></div>
+                        </div>
+                        <button type="submit" class="btn primary">Upload Receipt</button>
+                    </form>
+                </div>
+
+                <div class="receipts-list">
+                    <h2>Your Receipts</h2>
+                    {% if receipts %}
+                        <div class="receipt-cards">
+                            {% for receipt in receipts|reverse %}
+                                <div class="receipt-card" data-receipt-id="{{ receipt.id }}">
+                                    <div class="receipt-header">
+                                        <h3>Receipt #{{ receipt.id }}</h3>
+                                        <span class="receipt-date">{{ receipt.date.split('T')[0] }}</span>
+                                    </div>
+                                    <div class="receipt-image">
+                                        {% if receipt.image_path.startswith('static/') %}
+                                            <img src="{{ url_for('static', filename=receipt.image_path.replace('static/', '')) }}" alt="Receipt Image">
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename=receipt.image_path.replace('uploads/', 'uploads/')) }}" alt="Receipt Image">
+                                        {% endif %}
+                                    </div>
+                                    <div class="receipt-summary">
+                                        <p>{{ receipt['items']|length }} items</p>
+                                        <p>Total: ₹{{ "%.2f"|format(receipt['items']|sum(attribute='price')) }}</p>
+                                    </div>
+                                    <div class="receipt-actions">
+                                        <button class="btn secondary view-receipt-btn" data-receipt-id="{{ receipt.id }}">View Details</button>
+                                        <button class="btn danger delete-receipt-btn" data-receipt-id="{{ receipt.id }}" title="Delete Receipt">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-receipts">
+                            <i class="fas fa-receipt"></i>
+                            <p>No receipts uploaded yet. Upload your first receipt to get started!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Receipt Details Modal -->
+            <div id="receipt-details-modal" class="modal">
+                <div class="modal-content modal-lg">
+                    <span class="close">&times;</span>
+                    <h2>Receipt Details</h2>
+                    <div class="receipt-details-container">
+                        <div class="receipt-image-container">
+                            <img id="modal-receipt-image" src="" alt="Receipt Image">
+                        </div>
+                        <div class="receipt-items-container">
+                            <h3>Items</h3>
+                            <table class="receipt-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Price (₹)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="receipt-items-list">
+                                    <!-- Items will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                            <div class="receipt-total">
+                                <p>Total: ₹<span id="receipt-total-amount">0.00</span></p>
+                            </div>
+                            <div class="receipt-actions">
+                                <button id="add-receipt-item-btn" class="btn secondary">
+                                    <i class="fas fa-plus"></i> Add Item
+                                </button>
+                                <button id="save-receipt-changes-btn" class="btn primary">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button id="analyze-receipt-btn" class="btn accent">
+                                    <i class="fas fa-chart-line"></i> Analyze & Update Inventory
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Receipt Item Modal -->
+            <div id="add-receipt-item-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Add Item to Receipt</h2>
+                    <form id="add-receipt-item-form">
+                        <div class="form-group">
+                            <label for="receipt-item-name">Item Name</label>
+                            <input type="text" id="receipt-item-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="receipt-item-quantity">Quantity</label>
+                            <input type="number" id="receipt-item-quantity" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="receipt-item-price">Price (₹)</label>
+                            <input type="number" id="receipt-item-price" min="0.01" step="0.01" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">Add Item</button>
+                            <button type="button" class="btn secondary cancel-btn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/receipts.js') }}"></script>
+</body>
+</html>
