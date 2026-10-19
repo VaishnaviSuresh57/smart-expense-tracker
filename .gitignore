@@ -1,0 +1,18 @@
+# Ignore the inner project
+/expense-tracker/
+
+# Python environment
+.venv/
+__pycache__/
+*.pyc
+
+# Secret settings
+.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ZIP archives
+*.zip
