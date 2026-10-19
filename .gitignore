@@ -1,13 +1,16 @@
+
 # Ignore the inner project
 /expense-tracker/
 
-# Python environment
+# Python environment and cache
 .venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
 
 # Secret settings
 .env
+.env.*
 
 # Database files
 *.db
@@ -20,3 +23,14 @@ __pycache__/
 # User-uploaded receipts
 /static/uploads/*
 !/static/uploads/.gitkeep
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Testing cache
+.pytest_cache/
+.coverage
+htmlcov/
