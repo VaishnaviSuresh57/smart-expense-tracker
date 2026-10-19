@@ -97,19 +97,19 @@ http://127.0.0.1:5000
 
 ### 🏠 Dashboard
 
-![Expense Tracker Dashboard](images/dashboard.png)
+![Expense Tracker Dashboard](dashboard.png)
 
 ### 🧾 Receipt Scanning
 
-![Receipt Scanning](images/receipts.png)
+![Receipt Scanning](receipt_scanning.png)
 
 ### 📦 Inventory Management
 
-![Inventory Management](images/inventory.png)
+![Inventory Management](inventory_management.png)
 
 ### 📈 Spending Insights
 
-![Spending Insights](images/insights.png)
+![Spending Insights](insights.png)
 
 ## 🔒 Security and Privacy
 
