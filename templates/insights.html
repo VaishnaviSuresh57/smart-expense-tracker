@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insights - Expense Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-wallet"></i> Expense Tracker</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('inventory') }}"><i class="fas fa-box-open"></i> Inventory</a></li>
+                <li><a href="{{ url_for('receipts') }}"><i class="fas fa-receipt"></i> Receipts</a></li>
+                <li class="active"><a href="{{ url_for('insights') }}"><i class="fas fa-chart-pie"></i> Insights</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <header class="content-header">
+                <h1>Shopping Insights</h1>
+                <p>Compare your planned shopping with actual purchases</p>
+            </header>
+
+            {% if insights %}
+                <div class="insights-container">
+                    <div class="insight-section">
+                        <h2><i class="fas fa-exclamation-circle"></i> Extra Items Purchased</h2>
+                        {% if insights.extra_items %}
+                            <div class="insight-cards">
+                                {% for item in insights.extra_items %}
+                                    <div class="insight-card warning">
+                                        <div class="insight-icon">
+                                            <i class="fas fa-shopping-cart"></i>
+                                        </div>
+                                        <div class="insight-content">
+                                            <h3>{{ item.item }}</h3>
+                                            <p>Quantity: {{ item.quantity }}</p>
+                                            <p>Price: ₹{{ "%.2f"|format(item.price) }}</p>
+                                        </div>
+                                        <div class="insight-message">
+                                            <p>This item was not on your shopping list</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-insight success">
+                                <i class="fas fa-check-circle"></i>
+                                <p>Great job! You didn't buy any extra items that weren't on your list.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="insight-section">
+                        <h2><i class="fas fa-minus-circle"></i> Missing Items</h2>
+                        {% if insights.missing_items %}
+                            <div class="insight-cards">
+                                {% for item in insights.missing_items %}
+                                    <div class="insight-card info">
+                                        <div class="insight-icon">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <div class="insight-content">
+                                            <h3>{{ item.item }}</h3>
+                                            <p>Quantity: {{ item.quantity }}</p>
+                                            <p>Price: ₹{{ "%.2f"|format(item.price) }}</p>
+                                        </div>
+                                        <div class="insight-message">
+                                            <p>This item was on your shopping list but not purchased</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-insight success">
+                                <i class="fas fa-check-circle"></i>
+                                <p>You purchased all items from your shopping list!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="insight-section">
+                        <h2><i class="fas fa-dollar-sign"></i> Price Mismatches</h2>
+                        {% if insights.price_mismatches %}
+                            <div class="insight-cards">
+                                {% for item in insights.price_mismatches %}
+                                    <div class="insight-card {{ 'warning' if item.actual_price > item.expected_price else 'success' }}">
+                                        <div class="insight-icon">
+                                            <i class="fas fa-tags"></i>
+                                        </div>
+                                        <div class="insight-content">
+                                            <h3>{{ item.item }}</h3>
+                                            <p>Expected: ₹{{ "%.2f"|format(item.expected_price) }}</p>
+                                            <p>Actual: ₹{{ "%.2f"|format(item.actual_price) }}</p>
+                                        </div>
+                                        <div class="insight-message">
+                                            {% if item.actual_price > item.expected_price %}
+                                                <p>You paid ₹{{ "%.2f"|format(item.actual_price - item.expected_price) }} more than expected</p>
+                                            {% else %}
+                                                <p>You saved ₹{{ "%.2f"|format(item.expected_price - item.actual_price) }}!</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-insight success">
+                                <i class="fas fa-check-circle"></i>
+                                <p>All prices matched your expectations!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="insight-summary">
+                        <h2>Receipt Summary</h2>
+                        <div class="receipt-summary-card">
+                            <div class="receipt-info">
+                                <p><strong>Receipt #{{ receipt.id }}</strong></p>
+                                <p>Date: {{ receipt.date.split('T')[0] }}</p>
+                                <p>Items: {{ receipt['items']|length }}</p>
+                            </div>
+                            <div class="receipt-totals">
+                                <div class="total-item">
+                                    <span>Total Spent:</span>
+                                    <span>₹{{ "%.2f"|format(receipt['items']|sum(attribute='price')) }}</span>
+                                </div>
+                                <div class="total-item">
+                                    <span>Extra Items Cost:</span>
+                                    <span>₹{{ "%.2f"|format(insights.extra_items|sum(attribute='price')) }}</span>
+                                </div>
+                                <div class="total-item">
+                                    <span>Missing Items Value:</span>
+                                    <span>₹{{ "%.2f"|format(insights.missing_items|sum(attribute='price')) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-actions">
+                        <button id="update-inventory-btn" class="btn primary">
+                            <i class="fas fa-sync"></i> Update Inventory
+                        </button>
+                        <a href="{{ url_for('receipts') }}" class="btn secondary">
+                            <i class="fas fa-receipt"></i> Back to Receipts
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-insights">
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line"></i>
+                        <h2>No Insights Available</h2>
+                        <p>Upload a receipt and add items to your inventory to see insights.</p>
+                        <div class="action-buttons">
+                            <a href="{{ url_for('inventory') }}" class="btn primary">Add Inventory Items</a>
+                            <a href="{{ url_for('receipts') }}" class="btn secondary">Upload Receipt</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/insights.js') }}"></script>
+</body>
+</html>
