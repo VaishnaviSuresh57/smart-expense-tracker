@@ -34,3 +34,9 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+
+# Application data
+/data/users.json
+/data/receipts.json
+/data/inventory.json
